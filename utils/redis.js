@@ -11,8 +11,10 @@ class RedisClient {
 
     isAlive() {
         this.client.ping((err, resp) => {
-            if (resp === 'PONG') return true;
-            else return false;
+            if (resp === 'PONG') {
+		console.log(resp);
+		return true;
+	    } else return false;
         })
     }
 
