@@ -4,18 +4,18 @@ const redis = require('redis');
 class RedisClient {
     constructor () {
         this.client = redis.createClient();
+        this.connected = true;
         this.client.on('error', (err) => {
+            this.connected = false;
             console.error(err);
+        })
+        this.client.on("connect", () => {
+            this.connected = true;
         })
     }
 
     isAlive() {
-        this.client.ping((err, resp) => {
-            if (resp === 'PONG') {
-		console.log(resp);
-		return true;
-	    } else return false;
-        })
+        return this.connected;
     }
 
     async get(key) {
