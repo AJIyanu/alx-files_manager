@@ -1,8 +1,9 @@
-const redis = require('redis');
+// const redis = require('redis');
+import { createClient } from 'redis';
 
 class RedisClient {
     constructor () {
-        this.client = redis.createClient();
+        this.client = createClient();
         this.client.on('error', (err) => {
             console.error(err);
         })
