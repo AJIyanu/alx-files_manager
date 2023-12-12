@@ -16,7 +16,7 @@ class UsersController {
             return;
         }
 
-        const user = await (await dbClient.usersCollection()).findOne({ email });
+        const user = await dbClient.findUser(email);
         if ( user ) {
             res.status(400).json({error: "Already exist"})
             return;
@@ -24,8 +24,8 @@ class UsersController {
 
         const hashedPassword =crypto.createHash('sha1').update(password).digest('hex')
 
-        const newUser = await (await dbClient.usersCollection()).insertOne({ email: email, password: hashedPassword});
-        res.status(201).json({ email, id: newUser.insertedId.toString()});
+        const newUser = await dbClient.addUser( email, hashedPassword );
+        res.status(201).json({ email, id: newUser});
     }
 }
 

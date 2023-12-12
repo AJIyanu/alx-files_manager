@@ -23,6 +23,16 @@ class DBClient {
   async nbFiles() {
     return this.client.db().collection('files').countDocuments();
   }
+
+  async addUser( email, hashedPassword) {
+    const newUser = await this.client.db().collection('users').insertOne({ email: email, password: hashedPassword});
+    return newUser.insertedId.toString();
+  }
+
+  async findUser ( email ) {
+    const existUser = await this.client.db().collection('users').findOne({ email })
+    return existUser;
+  }
 }
 
 const dbClient = new DBClient();
