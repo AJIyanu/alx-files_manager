@@ -1,6 +1,6 @@
 const express = require('express');
 const { getStatus, getStats } = require('../controllers/AppController');
-const { postNew } = require('../controllers/UsersController');
+const { postNew, getMe } = require('../controllers/UsersController');
 const { getConnect, getDisconnect } = require('../controllers/AuthController');
 
 const router = express.Router();
@@ -14,5 +14,7 @@ router.post('/users', postNew);
 router.get('/connect', getConnect);
 
 router.get('/disconnect', getDisconnect);
+
+router.get('user/me', getMe);
 
 module.exports = router;
