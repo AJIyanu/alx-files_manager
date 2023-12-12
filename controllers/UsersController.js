@@ -3,11 +3,16 @@ const dbClient = require('../utils/db');
 
 class UsersController {
 
-    static postNew (req, res) {
-        if (!req.body.email) {
+    static async postNew (req, res) {
+        const email = req.body ? req.body.email : null;
+        const password = req.body ? req.body.password : null;
+
+        console.log(email, password);
+
+        if (!email) {
             res.status(400).json({error: "Missing email"});
         }
-        if (!req.body.password) {
+        if (!password) {
             res.status(400).json({error: "Missing password"});
         }
     }
