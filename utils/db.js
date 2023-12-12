@@ -33,6 +33,10 @@ class DBClient {
     const existUser = await this.client.db().collection('users').findOne({ email });
     return existUser;
   }
+
+  async userById(userId) {
+    return await this.client.db().collection('users').findOne({ _id: userId })
+  }
 }
 
 const dbClient = new DBClient();

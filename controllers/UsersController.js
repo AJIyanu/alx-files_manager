@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const dbClient = require('../utils/db');
+const redisClient = require('../utils/redis');
 
 class UsersController {
   static async postNew(req, res) {
@@ -26,6 +27,18 @@ class UsersController {
     const newUser = await dbClient.addUser(email, hashedPassword);
     res.status(201).json({ email, id: newUser });
   }
+
+  static async getMe(req, res) {
+    const token = req.headers.x-Token;
+    const exist = redisClient.get(`auth_${token}`) || nill;
+    if (exist) {
+        console.log(exist);
+        const user = await dbClient.userById(exist);
+        res.status(200).json({ email: user.email, id: exist })
+        return;
+    }
+    res.status(401).json({ error: "Unauthorized" });
+}
 }
 
 module.exports = UsersController;
