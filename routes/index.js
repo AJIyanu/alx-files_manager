@@ -15,6 +15,6 @@ router.get('/connect', getConnect);
 
 router.get('/disconnect', getDisconnect);
 
-router.get('user/me', getMe);
+router.get('/users/me', getMe);
 
 module.exports = router;

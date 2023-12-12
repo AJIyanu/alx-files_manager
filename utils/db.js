@@ -35,7 +35,9 @@ class DBClient {
   }
 
   async userById(userId) {
-    return await this.client.db().collection('users').findOne({ _id: userId })
+    const userid = new mongoDB.ObjectID(userId);
+    const user = await this.client.db().collection('users').findOne({ _id: userid });
+    return user;
   }
 }
 

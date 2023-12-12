@@ -29,16 +29,15 @@ class UsersController {
   }
 
   static async getMe(req, res) {
-    const token = req.headers.x-Token;
-    const exist = redisClient.get(`auth_${token}`) || nill;
+    const token = req.headers['x-token'];
+    const exist = await redisClient.get(`auth_${token}`);
     if (exist) {
-        console.log(exist);
-        const user = await dbClient.userById(exist);
-        res.status(200).json({ email: user.email, id: exist })
-        return;
+      const user = await dbClient.userById(exist);
+      res.status(200).json({ email: user.email, id: exist });
+      return;
     }
-    res.status(401).json({ error: "Unauthorized" });
-}
+    res.status(401).json({ error: 'Unauthorized' });
+  }
 }
 
 module.exports = UsersController;
