@@ -24,6 +24,11 @@ class DBClient {
     return this.client.db().collection('files').countDocuments();
   }
 
+  async addFiles( file ) {
+    const newFile = await this.client.db().collection('files').insertOne(file);
+    return newFile.insertedId.toString();
+  }
+
   async addUser(email, hashedPassword) {
     const newUser = await this.client.db().collection('users').insertOne({ email, password: hashedPassword });
     return newUser.insertedId.toString();
@@ -38,6 +43,12 @@ class DBClient {
     const userid = new mongoDB.ObjectID(userId);
     const user = await this.client.db().collection('users').findOne({ _id: userid });
     return user;
+  }
+
+  async findFile(parentId) {
+    const parentID = new mongoDB.ObjectID(parentId);
+    const exist = await this.client.db().collection('files').findOne({ _id: parentID });
+    return exist;
   }
 }
 
