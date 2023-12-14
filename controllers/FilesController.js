@@ -105,7 +105,7 @@ class FilesController {
     });
   }
 
-  async getShow(req, res) {
+  static async getShow(req, res) {
     const token = req.headers['x-token'];
     const exist = await redisClient.get(`auth_${token}`);
     if (!exist) {
