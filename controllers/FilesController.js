@@ -4,17 +4,17 @@ const uuidv4 = require('uuid').v4;
 const dbClient = require('../utils/db');
 const redisClient = require('../utils/redis');
 
-function saveFileLocal(details) {
+async function saveFileLocal(details) {
   const pFolder = process.env.FOLDER_PATH || '/tmp/files_manager';
   let path = '';
 
   if (details.parentId !== 0) {
-    fs.access(`${pFolder}/${details.parentId}`, (err) => {
+    fs.access(`${pFolder}/${details.parentFolder}`, (err) => {
       if (err) {
-        fs.mkdir(`${pFolder}/${details.parentId}`, (error) => console.error(error));
+        fs.mkdir(`${pFolder}/${details.parentFolder}`, (error) => console.error(error));
       }
-      path = `${pFolder}/${details.parentId}/${uuidv4()}`;
     });
+    path = `${pFolder}/${details.parentFolder}/${uuidv4()}`;
   } else {
     fs.access(pFolder, (err) => {
       if (err) {
@@ -52,7 +52,7 @@ class FilesController {
       res.status(400).json({ error: 'Missing name' });
       return;
     }
-    if (!type && fileType.indexOf(type) !== -1) {
+    if (!type || fileType.indexOf(type) === -1) {
       res.status(400).json({ error: 'Missing type' });
       return;
     }
@@ -61,6 +61,7 @@ class FilesController {
       return;
     }
 
+    let parentFolder = '';
     if (parentId !== 0) {
       const checkFolder = await dbClient.findFile(parentId);
       if (!checkFolder) {
@@ -71,6 +72,7 @@ class FilesController {
         res.status(400).json({ error: 'Parent is not a Folder' });
         return;
       }
+      parentFolder = checkFolder.name;
     }
 
     if (type === 'folder') {
@@ -86,7 +88,7 @@ class FilesController {
       });
       return;
     }
-    const localPath = saveFileLocal({ parentId, data });
+    const localPath = await saveFileLocal({ parentFolder, parentId, data });
 
     const fileProperty = {
       name,

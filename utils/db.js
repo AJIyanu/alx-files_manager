@@ -24,7 +24,7 @@ class DBClient {
     return this.client.db().collection('files').countDocuments();
   }
 
-  async addFiles( file ) {
+  async addFiles(file) {
     const newFile = await this.client.db().collection('files').insertOne(file);
     return newFile.insertedId.toString();
   }
@@ -46,9 +46,11 @@ class DBClient {
   }
 
   async findFile(parentId) {
-    const parentID = new mongoDB.ObjectID(parentId);
-    const exist = await this.client.db().collection('files').findOne({ _id: parentID });
-    return exist;
+    try {
+      const parentID = new mongoDB.ObjectID(parentId);
+      const exist = await this.client.db().collection('files').findOne({ _id: parentID });
+      return exist;
+    } catch (err) { return null; }
   }
 }
 
