@@ -115,9 +115,11 @@ class FilesController {
     const file = await dbClient.findFile(fileId);
     if (!file) {
       res.status(404).json({ error: "Not found" });
+      return;
     }
-    if ( file.userId !== exist.id ) {
+    if ( file.userId.toString() !== exist ) {
       res.status(404).json({ error: "Not found" });
+      return;
     }
 
     res.status(201).json(file)
