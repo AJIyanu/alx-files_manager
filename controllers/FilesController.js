@@ -104,6 +104,24 @@ class FilesController {
       id: saveFile, userId: exist, name, type, isPublic, parentId,
     });
   }
+
+  async getShow(req, res) {
+    const token = req.headers['x-token'];
+    const exist = await redisClient.get(`auth_${token}`);
+    if (!exist) {
+      res.status(401).json({ error: "Unauthorozed" });
+    }
+    const fileId = req.params.id;
+    const file = await dbClient.findFile(fileId);
+    if (!file) {
+      res.status(404).json({ error: "Not found" });
+    }
+    if ( file.userId !== exist.id ) {
+      res.status(404).json({ error: "Not found" });
+    }
+
+    res.status(201).json(file)
+  }
 }
 
 module.exports = FilesController;
