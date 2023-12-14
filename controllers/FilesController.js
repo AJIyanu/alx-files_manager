@@ -84,7 +84,7 @@ class FilesController {
       };
       const saveFile = await dbClient.addFiles(fileProperty);
       res.status(201).json({
-        id: saveFile, userId: exist, name, type,
+        id: saveFile, userId: exist, name, type, parentId,
       });
       return;
     }
