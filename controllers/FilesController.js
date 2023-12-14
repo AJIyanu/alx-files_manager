@@ -69,7 +69,7 @@ class FilesController {
         return;
       }
       if (checkFolder.type !== 'folder') {
-        res.status(400).json({ error: 'Parent is not a Folder' });
+        res.status(400).json({ error: 'Parent is not a folder' });
         return;
       }
       parentFolder = checkFolder.name;
