@@ -22,6 +22,6 @@ router.post('/files', postUpload);
 
 router.get('/files/:id', getShow);
 
-router.get('files', getIndex);
+router.get('/files', getIndex);
 
 module.exports = router;
