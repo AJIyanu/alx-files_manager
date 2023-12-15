@@ -131,9 +131,10 @@ class FilesController {
     if (!exist) {
       res.status(401).json({ error: "Unauthorozed" });
     }
-    const parentIdQuery = req.query.parentId
-    const pageQuery = req.query.page
-    console.log(parentIdQuery);
+    const parentIdQuery = req.query.parentId;
+    const pageQuery = req.query.page;
+    const allFiles = await dbClient.findFIles({userId: exist})
+    console.log(allFiles);
   }
 }
 

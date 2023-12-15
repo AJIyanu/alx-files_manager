@@ -52,6 +52,11 @@ class DBClient {
       return exist;
     } catch (err) { return null; }
   }
+
+  async findFIles(params) {
+    const files = await this.client.db().collection('files').find(params);
+    return files;
+  }
 }
 
 const dbClient = new DBClient();
