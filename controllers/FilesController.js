@@ -143,7 +143,7 @@ class FilesController {
     const userId = new mongoDB.ObjectID(exist);
     if (!parentIdQuery) {
       const allFiles = await dbClient.findFIles({ userId }, pageQuery, 20);
-      let userFiles = [];
+      const userFiles = [];
       for (const data of allFiles) {
         userFiles.push({
           id: data._id.toString(),
@@ -152,13 +152,13 @@ class FilesController {
           type: data.type,
           isPublic: data.isPublic,
           parentId: data.parentId,
-        })
+        });
       }
       res.status(200).json(userFiles);
       return;
     }
     const allFiles = await dbClient.findFIles({ userId, parentId: parentIdQuery }, pageQuery, 20);
-    let userFiles = [];
+    const userFiles = [];
     for (const data of allFiles) {
       userFiles.push({
         id: data._id.toString(),
@@ -167,7 +167,7 @@ class FilesController {
         type: data.type,
         isPublic: data.isPublic,
         parentId: data.parentId,
-      })
+      });
     }
     res.status(200).json(userFiles);
   }
