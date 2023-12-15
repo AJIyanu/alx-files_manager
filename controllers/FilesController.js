@@ -143,12 +143,33 @@ class FilesController {
     const userId = new mongoDB.ObjectID(exist);
     if (!parentIdQuery) {
       const allFiles = await dbClient.findFIles({ userId }, pageQuery, 20);
-      console.log('no parentIdQuery', allFiles);
-      res.status(200).json(allFiles);
+      let userFiles = [];
+      for (const data of allFiles) {
+        userFiles.push({
+          id: data._id.toString(),
+          userId: data.userId,
+          name: data.name,
+          type: data.type,
+          isPublic: data.isPublic,
+          parentId: data.parentId,
+        })
+      }
+      res.status(200).json(userFiles);
       return;
     }
     const allFiles = await dbClient.findFIles({ userId, parentId: parentIdQuery }, pageQuery, 20);
-    res.status(200).json(allFiles);
+    let userFiles = [];
+    for (const data of allFiles) {
+      userFiles.push({
+        id: data._id.toString(),
+        userId: data.userId,
+        name: data.name,
+        type: data.type,
+        isPublic: data.isPublic,
+        parentId: data.parentId,
+      })
+    }
+    res.status(200).json(userFiles);
   }
 }
 
