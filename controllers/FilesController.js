@@ -109,7 +109,7 @@ class FilesController {
     const token = req.headers['x-token'];
     const exist = await redisClient.get(`auth_${token}`);
     if (!exist) {
-      res.status(401).json({ error: 'Unauthorozed' });
+      res.status(401).json({ error: 'Unauthorized' });
     }
     const fileId = req.params.id;
     const file = await dbClient.findFile(fileId);
@@ -136,7 +136,7 @@ class FilesController {
     const token = req.headers['x-token'];
     const exist = await redisClient.get(`auth_${token}`);
     if (!exist) {
-      res.status(401).json({ error: 'Unauthorozed' });
+      res.status(401).json({ error: 'Unauthorized' });
     }
     const parentIdQuery = req.query.parentId;
     const pageQuery = req.query.page ? req.params.page : 0;
