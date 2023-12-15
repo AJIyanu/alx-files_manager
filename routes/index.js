@@ -2,7 +2,9 @@ const express = require('express');
 const { getStatus, getStats } = require('../controllers/AppController');
 const { postNew, getMe } = require('../controllers/UsersController');
 const { getConnect, getDisconnect } = require('../controllers/AuthController');
-const { postUpload, getShow, getIndex, putPublish, putUnpublish } = require('../controllers/FilesController');
+const {
+  postUpload, getShow, getIndex, putPublish, putUnpublish,
+} = require('../controllers/FilesController');
 
 const router = express.Router();
 

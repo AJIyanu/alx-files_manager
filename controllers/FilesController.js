@@ -192,7 +192,7 @@ class FilesController {
     }
 
     await dbClient.updatePublish(file, true);
-    res.status(201).json({
+    res.status(200).json({
       id: file._id.toString(),
       userId: file.userId,
       name: file.name,
@@ -221,7 +221,7 @@ class FilesController {
     }
 
     await dbClient.updatePublish(file, false);
-    res.status(201).json({
+    res.status(200).json({
       id: file._id.toString(),
       userId: file.userId,
       name: file.name,

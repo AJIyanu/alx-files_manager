@@ -10,7 +10,7 @@ import sha1 from 'sha1';
 
 chai.use(chaiHttp);
 
-describe('GET /files', () => {
+describe('PUT /files/:id/publish', () => {
     let testClientDb;
     let testRedisClient;
     let redisDelAsync;
@@ -22,7 +22,8 @@ describe('GET /files', () => {
     let initialUserId = null;
     let initialUserToken = null;
 
-    let initialFiles = [];
+    let initialFolder = null;
+    let initialFolderId = null;
 
     const fctRandomString = () => {
         return Math.random().toString(36).substring(2, 15);
@@ -57,19 +58,17 @@ describe('GET /files', () => {
                     initialUserId = createdDocs.ops[0]._id.toString();
                 }
 
-                // Add folders
-                for(let i = 0 ; i < 25 ; i += 1) {
-                    const item = { 
-                        userId: ObjectID(initialUserId), 
-                        name: fctRandomString(), 
-                        type: "folder", 
-                        parentId: '0' 
-                    };
-                    const createdFileDocs = await testClientDb.collection('files').insertOne(item);
-                    if (createdFileDocs && createdFileDocs.ops.length > 0) {
-                        item.id = createdFileDocs.ops[0]._id.toString();
-                    }
-                    initialFiles.push(item)
+                // Add 1 folder
+                initialFolder = { 
+                    userId: ObjectID(initialUserId), 
+                    name: fctRandomString(), 
+                    type: "folder", 
+                    parentId: '0',
+                    isPublic: false
+                };
+                const createdFileDocs = await testClientDb.collection('files').insertOne(initialFolder);
+                if (createdFileDocs && createdFileDocs.ops.length > 0) {
+                    initialFolderId = createdFileDocs.ops[0]._id.toString();
                 }
 
                 testRedisClient = redis.createClient();
@@ -93,35 +92,20 @@ describe('GET /files', () => {
         fctRemoveAllRedisKeys();
     });
 
-    it('GET /files with no parentId and second page', (done) => {
+    it('PUT /files/:id/publish with correct :id of the owner - file not published yet', (done) => {
         chai.request('http://localhost:5000')
-            .get(`/files`)
-            .query({ page: 1 })
+            .put(`/files/${initialFolderId}/publish`)
             .set('X-Token', initialUserToken)
             .end(async (err, res) => {
-		console.log("end callback started");
                 chai.expect(err).to.be.null;
                 chai.expect(res).to.have.status(200);
-		console.log("first assertion");
 
-                const resList = res.body;
-		console.log(resList);
-//                chai.expect(resList.length).to.equal(5);
-                
-//                resList.forEach((item) => {
- //                   const itemIdx = initialFiles.findIndex((i) => i.id == item.id);
-   //                 chai.assert.isAtLeast(itemIdx, 0);
-                    
-     //               const itemInit = initialFiles.splice(itemIdx, 1)[0];
-       //             chai.expect(itemInit).to.not.be.null;
-
-         //           chai.expect(itemInit.id).to.equal(item.id);
-           //         chai.expect(itemInit.name).to.equal(item.name);
-             //       chai.expect(itemInit.type).to.equal(item.type);
-               //     chai.expect(itemInit.parentId).to.equal(item.parentId);
-               // });
-                
-               // chai.expect(initialFiles.length).to.equal(20);
+                const resFile = res.body;
+                chai.expect(resFile.name).to.equal(initialFolder.name);
+                chai.expect(resFile.type).to.equal(initialFolder.type);
+                chai.expect(resFile.isPublic).to.true
+                chai.expect(resFile.parentId.toString()).to.equal(initialFolder.parentId.toString());
+                chai.expect(resFile.userId.toString()).to.equal(initialFolder.userId.toString());
 
                 done();
             });
