@@ -122,7 +122,7 @@ class FilesController {
       return;
     }
 
-    res.status(201).json({
+    res.status(200).json({
       id: file._id,
       userId: exist,
       name: file.name,
@@ -144,11 +144,11 @@ class FilesController {
     if (!parentIdQuery) {
       const allFiles = await dbClient.findFIles({ userId }, pageQuery, 20);
       console.log('no parentIdQuery', allFiles);
-      res.status(201).json(allFiles);
+      res.status(200).json(allFiles);
       return;
     }
     const allFiles = await dbClient.findFIles({ userId, parentId: parentIdQuery }, pageQuery, 20);
-    res.status(201).json(allFiles);
+    res.status(200).json(allFiles);
   }
 }
 
