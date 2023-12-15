@@ -62,6 +62,11 @@ class DBClient {
 //    files = [...files]
     return files;
   }
+
+  async updatePublish(params, status) {
+    await this.client.db().collection('files').updateOne(params, { $set: { isPubic: status }})
+  }
+
 }
 
 const dbClient = new DBClient();
