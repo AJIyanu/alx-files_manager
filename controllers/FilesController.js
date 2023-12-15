@@ -3,7 +3,6 @@ const mongoDB = require('mongodb');
 const uuidv4 = require('uuid').v4;
 const dbClient = require('../utils/db');
 const redisClient = require('../utils/redis');
-const { all } = require('../routes');
 
 async function saveFileLocal(details) {
   const pFolder = process.env.FOLDER_PATH || '/tmp/files_manager';
@@ -110,36 +109,45 @@ class FilesController {
     const token = req.headers['x-token'];
     const exist = await redisClient.get(`auth_${token}`);
     if (!exist) {
-      res.status(401).json({ error: "Unauthorozed" });
+      res.status(401).json({ error: 'Unauthorozed' });
     }
     const fileId = req.params.id;
     const file = await dbClient.findFile(fileId);
     if (!file) {
-      res.status(404).json({ error: "Not found" });
+      res.status(404).json({ error: 'Not found' });
       return;
     }
-    if ( file.userId.toString() !== exist ) {
-      res.status(404).json({ error: "Not found" });
+    if (file.userId.toString() !== exist) {
+      res.status(404).json({ error: 'Not found' });
       return;
     }
 
-    res.status(201).json({ id: file._id, userId: exist, name: file.name, type: file.type, isPublic: file.isPublic, parentId: file.parentId })
+    res.status(201).json({
+      id: file._id,
+      userId: exist,
+      name: file.name,
+      type: file.type,
+      isPublic: file.isPublic,
+      parentId: file.parentId,
+    });
   }
 
   static async getIndex(req, res) {
     const token = req.headers['x-token'];
     const exist = await redisClient.get(`auth_${token}`);
     if (!exist) {
-      res.status(401).json({ error: "Unauthorozed" });
+      res.status(401).json({ error: 'Unauthorozed' });
     }
     const parentIdQuery = req.query.parentId;
     const pageQuery = req.query.page ? req.params.page : 0;
+    const userId = new mongoDB.ObjectID(exist);
     if (!parentIdQuery) {
-      const allFiles = await dbClient.findFIles({userId: exist}, pageQuery, 20)
+      const allFiles = await dbClient.findFIles({ userId }, pageQuery, 20);
+      console.log('no parentIdQuery', allFiles);
       res.status(201).json(allFiles);
       return;
     }
-    const allFiles = await dbClient.findFIles({userId: exist, parentId: parentIdQuery}, pageQuery, 20);
+    const allFiles = await dbClient.findFIles({ userId, parentId: parentIdQuery }, pageQuery, 20);
     res.status(201).json(allFiles);
   }
 }
