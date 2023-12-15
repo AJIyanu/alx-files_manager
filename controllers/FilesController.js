@@ -122,7 +122,17 @@ class FilesController {
       return;
     }
 
-    res.status(201).json(file)
+    res.status(201).json({ id: file._id, userId: exist, name: file.name, type: file.type, isPublic: file.isPublic, parentId: file.parentId })
+  }
+
+  static async getIndex(req, res) {
+    const token = req.headers['x-token'];
+    const exist = await redisClient.get(`auth_${token}`);
+    if (!exist) {
+      res.status(401).json({ error: "Unauthorozed" });
+    }
+    const parentIdQuery = req.query
+    console.log(parentIdQuery);
   }
 }
 
