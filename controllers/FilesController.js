@@ -3,6 +3,7 @@ const mongoDB = require('mongodb');
 const uuidv4 = require('uuid').v4;
 const dbClient = require('../utils/db');
 const redisClient = require('../utils/redis');
+const { all } = require('../routes');
 
 async function saveFileLocal(details) {
   const pFolder = process.env.FOLDER_PATH || '/tmp/files_manager';
@@ -132,9 +133,14 @@ class FilesController {
       res.status(401).json({ error: "Unauthorozed" });
     }
     const parentIdQuery = req.query.parentId;
-    const pageQuery = req.query.page;
-    const allFiles = await dbClient.findFIles({userId: exist})
-    console.log(allFiles);
+    const pageQuery = req.query.page ? req.params.page : 0;
+    if (!parentIdQuery) {
+      const allFiles = await dbClient.findFIles({userId: exist}, pageQuery, 20)
+      res.status(201).json(allFiles);
+      return;
+    }
+    const allFiles = await dbClient.findFIles({userId: exist, parentId: parentIdQuery}, pageQuery, 20);
+    res.status(201).json(allFiles);
   }
 }
 
