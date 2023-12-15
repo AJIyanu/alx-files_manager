@@ -3,6 +3,7 @@ const mongoDB = require('mongodb');
 const uuidv4 = require('uuid').v4;
 const dbClient = require('../utils/db');
 const redisClient = require('../utils/redis');
+const mime = require('mime');
 
 async function saveFileLocal(details) {
   const pFolder = process.env.FOLDER_PATH || '/tmp/files_manager';
@@ -30,6 +31,21 @@ async function saveFileLocal(details) {
   fs.writeFileSync(path, plainString, (errr) => console.error(errr));
 
   return path;
+}
+
+async function readLocalFile(fileJson) {
+  const pFolder = process.env.FOLDER_PATH || '/tmp/files_manager';
+  let path = fileJson.name;
+  let pId = fileJson.parentId;
+  while (pId !== "0") {
+    const upLevel = await dbClient.findFile(pId);
+    pId = upLevel.parentId.toString();
+    path = `/${upLevel.name}` + path;
+  }
+  path = pFolder + path;
+
+  const fileContent = fs.readFileSync(path);
+  return [fileContent, path];
 }
 
 class FilesController {
@@ -229,6 +245,37 @@ class FilesController {
       isPublic: false,
       parentId: file.parentId,
     });
+  }
+
+  static async getFile(req, res) {
+    const token = req.headeers['x-token'];
+    const exist = await redisClient.get(`auth_${token}`)
+    if (!exist) {
+      res.status(404).json({ error: "Not found" });
+      return;
+    }
+    const fileId = req.params.id;
+    const file = await dbClient.findFIle(fileId);
+
+    if (!file) {
+      res.status(404).json({ error: "Not found" });
+      return;
+    }
+
+    if (file.isPublic === false) {
+      res.status(400).json(`A folder doesn't have content`);
+      return;
+    }
+
+    if ( exist !== file.userId.toString()) {
+      res.status(404).json({ error: 'Not found' });
+      return;
+    }
+
+    const type = file.name.split('.').pop();
+    const fileContent = await readLocalFile(file);
+    res.setHeader('Content-Type', mime.getType(type) || 'text/plain; charset=utf-8');
+    res.status(200).sendFile(fileContent[1]);
   }
 }
 
