@@ -137,6 +137,7 @@ class FilesController {
     const exist = await redisClient.get(`auth_${token}`);
     if (!exist) {
       res.status(401).json({ error: 'Unauthorized' });
+      return;
     }
     const parentIdQuery = req.query.parentId;
     const pageQuery = req.query.page ? req.params.page : 0;

@@ -56,8 +56,8 @@ class DBClient {
   async findFIles(params, page, pgSize) {
     const files = await this.client.db().collection('files').aggregate([
       { $match: params },
-      { $skip: page * pgSize},
-      { $limit: pgSize },
+      { $skip: parseInt(page) * parseInt(pgSize)},
+      { $limit: parseInt(pgSize) },
     ]).toArray();
 //    files = [...files]
     return files;
