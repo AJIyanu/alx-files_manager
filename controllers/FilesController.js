@@ -1,9 +1,9 @@
 const fs = require('fs');
 const mongoDB = require('mongodb');
 const uuidv4 = require('uuid').v4;
+const mime = require('mime');
 const dbClient = require('../utils/db');
 const redisClient = require('../utils/redis');
-const mime = require('mime');
 
 async function saveFileLocal(details) {
   const pFolder = process.env.FOLDER_PATH || '/tmp/files_manager';
@@ -34,14 +34,17 @@ async function saveFileLocal(details) {
 }
 
 async function readLocalFile(fileJson) {
-  const pFolder = process.env.FOLDER_PATH || '/tmp/files_manager';
-  let path = fileJson.name;
+  const pFolder = process.env.FOLDER_PATH || '/tmp/files_manager/';
+  let path = fileJson.localPath.split('/').pop();
   let pId = fileJson.parentId;
-  while (pId !== "0") {
+  /* eslint-disable no-await-in-loop */
+  while (pId !== '0' && pId !== 0) {
     const upLevel = await dbClient.findFile(pId);
+    console.log(upLevel);
     pId = upLevel.parentId.toString();
-    path = `/${upLevel.name}` + path;
+    path = `/${upLevel.name}${path}`;
   }
+  /* eslint-enable no-await-in-loop */
   path = pFolder + path;
 
   const fileContent = fs.readFileSync(path);
@@ -248,26 +251,26 @@ class FilesController {
   }
 
   static async getFile(req, res) {
-    const token = req.headeers['x-token'];
-    const exist = await redisClient.get(`auth_${token}`)
+    const token = req.headers['x-token'];
+    const exist = await redisClient.get(`auth_${token}`);
     if (!exist) {
-      res.status(404).json({ error: "Not found" });
+      res.status(404).json({ error: 'Not found' });
       return;
     }
     const fileId = req.params.id;
-    const file = await dbClient.findFIle(fileId);
+    const file = await dbClient.findFile(fileId);
 
     if (!file) {
-      res.status(404).json({ error: "Not found" });
+      res.status(404).json({ error: 'Not found' });
       return;
     }
 
     if (file.isPublic === false) {
-      res.status(400).json(`A folder doesn't have content`);
+      res.status(400).json('A folder doesn\'t have content');
       return;
     }
 
-    if ( exist !== file.userId.toString()) {
+    if (exist !== file.userId.toString()) {
       res.status(404).json({ error: 'Not found' });
       return;
     }

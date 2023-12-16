@@ -30,7 +30,6 @@ router.put('/files/:id/unpublish', putUnpublish);
 
 router.put('/files/:id/publish', putPublish);
 
-router.put('/files/:id/data', getFile);
-
+router.get('/files/:id/data', getFile);
 
 module.exports = router;
