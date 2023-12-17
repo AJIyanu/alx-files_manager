@@ -2,6 +2,7 @@ import chai from 'chai';
 import chaiHttp from 'chai-http';
 
 import { v4 as uuidv4 } from 'uuid';
+import fs from 'fs';
 
 import { MongoClient, ObjectID } from 'mongodb';
 import { promisify } from 'util';
@@ -10,7 +11,7 @@ import sha1 from 'sha1';
 
 chai.use(chaiHttp);
 
-describe('PUT /files/:id/publish', () => {
+describe('GET /files/:id/data', () => {
     let testClientDb;
     let testRedisClient;
     let redisDelAsync;
@@ -18,12 +19,17 @@ describe('PUT /files/:id/publish', () => {
     let redisSetAsync;
     let redisKeysAsync;
 
+    let fileUser = null;
+    let fileUserId = null;
+    
     let initialUser = null;
     let initialUserId = null;
     let initialUserToken = null;
 
-    let initialFolder = null;
-    let initialFolderId = null;
+    let initialFileId = null;
+    let initialFileContent = null;
+
+    const folderTmpFilesManagerPath = process.env.FOLDER_PATH || '/tmp/files_manager';
 
     const fctRandomString = () => {
         return Math.random().toString(36).substring(2, 15);
@@ -34,6 +40,18 @@ describe('PUT /files/:id/publish', () => {
             await redisDelAsync(key);
         });
     }
+    const fctCreateTmp = () => {
+        if (!fs.existsSync(folderTmpFilesManagerPath)) {
+            fs.mkdirSync(folderTmpFilesManagerPath);
+        }
+    }
+    const fctRemoveTmp = () => {
+        if (fs.existsSync(folderTmpFilesManagerPath)) {
+            fs.readdirSync(`${folderTmpFilesManagerPath}/`).forEach((i) => {
+                fs.unlinkSync(`${folderTmpFilesManagerPath}/${i}`)
+            })
+        }
+    }
 
     beforeEach(() => {
         const dbInfo = {
@@ -42,6 +60,7 @@ describe('PUT /files/:id/publish', () => {
             database: process.env.DB_DATABASE || 'files_manager'
         };
         return new Promise((resolve) => {
+            fctRemoveTmp();
             MongoClient.connect(`mongodb://${dbInfo.host}:${dbInfo.port}/${dbInfo.database}`, async (err, client) => {
                 testClientDb = client.db(dbInfo.database);
             
@@ -58,17 +77,33 @@ describe('PUT /files/:id/publish', () => {
                     initialUserId = createdDocs.ops[0]._id.toString();
                 }
 
-                // Add 1 folder
-                initialFolder = { 
-                    userId: ObjectID(initialUserId), 
+                // Add 1 user owner of file
+                fileUser = { 
+                    email: `${fctRandomString()}@me.com`,
+                    password: sha1(fctRandomString())
+                }
+                const createdUserFileDocs = await testClientDb.collection('users').insertOne(fileUser);
+                if (createdUserFileDocs && createdUserFileDocs.ops.length > 0) {
+                    fileUserId = createdUserFileDocs.ops[0]._id.toString();
+                }
+
+                // Add 1 file
+                fctCreateTmp();
+                const fileLocalPath = `${folderTmpFilesManagerPath}/${uuidv4()}`;
+                initialFileContent = `Hello-${uuidv4()}`;
+                fs.writeFileSync(fileLocalPath, initialFileContent);
+
+                const initialFile = { 
+                    userId: ObjectID(fileUserId), 
                     name: fctRandomString(), 
-                    type: "folder", 
+                    type: "file", 
                     parentId: '0',
-                    isPublic: false
+                    isPublic: true,
+                    localPath: fileLocalPath
                 };
-                const createdFileDocs = await testClientDb.collection('files').insertOne(initialFolder);
+                const createdFileDocs = await testClientDb.collection('files').insertOne(initialFile);
                 if (createdFileDocs && createdFileDocs.ops.length > 0) {
-                    initialFolderId = createdFileDocs.ops[0]._id.toString();
+                    initialFileId = createdFileDocs.ops[0]._id.toString();
                 }
 
                 testRedisClient = redis.createClient();
@@ -90,23 +125,29 @@ describe('PUT /files/:id/publish', () => {
         
     afterEach(() => {
         fctRemoveAllRedisKeys();
+        fctRemoveTmp();
     });
 
-    it('PUT /files/:id/publish with correct :id of the owner - file not published yet', (done) => {
+    it('GET /files/:id/data with a published file linked to :id and user authenticated but not owner', (done) => {
         chai.request('http://localhost:5000')
-            .put(`/files/${initialFolderId}/publish`)
+            .get(`/files/${initialFileId}/data`)
             .set('X-Token', initialUserToken)
+            .buffer()
+            .parse((res, cb) => {
+                res.setEncoding("binary");
+                res.data = "";
+                res.on("data", (chunk) => {
+                    res.data += chunk;
+                });
+                res.on("end", () => {
+                    cb(null, new Buffer(res.data, "binary"));
+                });
+            })
             .end(async (err, res) => {
                 chai.expect(err).to.be.null;
                 chai.expect(res).to.have.status(200);
-
-                const resFile = res.body;
-                chai.expect(resFile.name).to.equal(initialFolder.name);
-                chai.expect(resFile.type).to.equal(initialFolder.type);
-                chai.expect(resFile.isPublic).to.true
-                chai.expect(resFile.parentId.toString()).to.equal(initialFolder.parentId.toString());
-                chai.expect(resFile.userId.toString()).to.equal(initialFolder.userId.toString());
-
+                chai.expect(res.body.toString()).to.equal(initialFileContent);
+                
                 done();
             });
     }).timeout(30000);

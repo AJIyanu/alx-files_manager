@@ -1,4 +1,5 @@
 import { contentType } from 'mime-types';
+
 const fs = require('fs');
 const mongoDB = require('mongodb');
 const uuidv4 = require('uuid').v4;
@@ -252,12 +253,6 @@ class FilesController {
   }
 
   static async getFile(req, res) {
-    const token = req.headers['x-token'];
-    const exist = await redisClient.get(`auth_${token}`);
-    if (!exist) {
-      res.status(404).json({ error: 'Not found' });
-      return;
-    }
     const fileId = req.params.id;
     const file = await dbClient.findFile(fileId);
 
@@ -267,18 +262,12 @@ class FilesController {
     }
 
     if (file.isPublic === false) {
-      res.status(404).json({ error: "Not found" });
-      return;
-    }
-
-    if (file.type === "folder") {
-      res.status(400).json('A folder doesn\'t have content');
-      return;
-    }
-
-    console.log(exist !== file.userId.toString(), exist !== file.userId);
-    if (exist !== file.userId.toString()) {
       res.status(404).json({ error: 'Not found' });
+      return;
+    }
+
+    if (file.type === 'folder') {
+      res.status(400).json('A folder doesn\'t have content');
       return;
     }
 
