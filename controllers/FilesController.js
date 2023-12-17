@@ -1,7 +1,8 @@
+import { contentType } from 'mime-types';
 const fs = require('fs');
 const mongoDB = require('mongodb');
 const uuidv4 = require('uuid').v4;
-const mime = require('mime');
+// const mime = require('mime');
 const dbClient = require('../utils/db');
 const redisClient = require('../utils/redis');
 
@@ -283,7 +284,7 @@ class FilesController {
 
     const type = file.name.split('.').pop();
     const fileContent = await readLocalFile(file);
-    res.setHeader('Content-Type', mime.getType(type) || 'text/plain; charset=utf-8');
+    res.setHeader('Content-Type', contentType(type) || 'text/plain; charset=utf-8');
     res.status(200).sendFile(fileContent[1]);
   }
 }
